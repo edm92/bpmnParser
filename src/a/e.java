@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 public class e {
 	public static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	
-	public static boolean __DEBUG = true;
+	public static boolean __DEBUG = false;
 	public static boolean __INFO  = true;
 	public static boolean __FATAL = true;
 	public static boolean __HIGHDETAILS = false;

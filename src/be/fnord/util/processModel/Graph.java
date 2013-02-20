@@ -134,9 +134,6 @@ public class Graph<v extends Vertex , e extends Edge> extends DefaultDirectedGra
 			Vertex src = (Vertex)((be.fnord.util.processModel.Edge)myE).getSource();
 			Vertex trg = (Vertex)((be.fnord.util.processModel.Edge)myE).getTarget();
 			
-//			FlowNode jbptSrc = jbptNodeElements.get(src.getName());
-//			FlowNode jbptTrg = jbptNodeElements.get(trg.getName());
-//			jbptProcess.addControlFlow(jbptSrc, jbptTrg);
 			
 			if(src == null ){
 				if(__DEBUG) a.e.println("src node not found " );
@@ -146,6 +143,11 @@ public class Graph<v extends Vertex , e extends Edge> extends DefaultDirectedGra
 				if(__DEBUG) a.e.println("trg node not found " );
 				return false;
 			}
+
+			FlowNode jbptSrc = jbptNodeElements.get(src.getName());
+			FlowNode jbptTrg = jbptNodeElements.get(trg.getName());
+			jbptProcess.addControlFlow(jbptSrc, jbptTrg);
+
 			
 			if(__DEBUG &&  a.e.__HIGHDETAILS) a.e.println(src.name + " " + this.inDegreeOf(src));
 			if(__DEBUG &&  a.e.__HIGHDETAILS) a.e.println(trg.toString() + " ");

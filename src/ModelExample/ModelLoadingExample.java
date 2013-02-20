@@ -39,13 +39,14 @@ public class ModelLoadingExample {
 		// The jbpt algorithms appear mangled for their DirectedGraphAlgorithms, to use these functions 
 		// we need to recreate all edges with a new interface. Something to do later
 		
-		//System.out.println("Trying to load a json file attached to the jbptTests");
-		//Graph<Vertex,Edge> g3 = altJSON2Process.convert("988654311_rev1.json", altJSON2Process.readFile("models/a.s00000112__s00003260.tpn_0.json"));
+		System.out.println("Trying to load a json file attached to the jbptTests");
+		Graph<Vertex,Edge> g3 = altJSON2Process.convert("988654311_rev1.json", altJSON2Process.readFile("models/a.s00000112__s00003260.tpn_0.json"));
+		System.out.println("Displaying JSON file form jbptTests:" + g3.toString());
 		
 		// Loading the BMI json files: 
-		Graph<Vertex,Edge> g3 = BMIJSON2Graph.convert("1582472422_rev18.json", altJSON2Process.readFile("models/1582472422_rev18.json"));
-		System.out.println("Displaying JSON based model:" + g3.toString());
-		System.out.println("G3 Test: " + g2Checker.CheckGraph(g3));
+		Graph<Vertex,Edge> g4 = BMIJSON2Graph.convert("1582472422_rev18.json", altJSON2Process.readFile("models/1582472422_rev18.json"));
+		System.out.println("Displaying JSON based model:" + g4.toString());
+		System.out.println("G4 Test: " + g2Checker.CheckGraph(g4));
 		
 		//PGraph<Vertex,Edge> seqPGraph = seqComp(g1, g2);
 		//System.out.println("PG-" + seqPGraph);

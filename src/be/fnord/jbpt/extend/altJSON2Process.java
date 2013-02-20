@@ -23,6 +23,7 @@ import be.fnord.util.processModel.Vertex;
  */
 public class altJSON2Process {
 
+	// TODO note completed
 	public static Graph<Vertex,Edge> convert(String name, String json){
 		Graph<Vertex,Edge> result = new Graph<Vertex,Edge>(Edge.class);
 		result.name = name;
@@ -37,8 +38,16 @@ public class altJSON2Process {
 		// Lets copy the process to a graph
 		for(ControlFlow<?> e: jbptProcess.getEdges()){
 			FlowNode src = (FlowNode) e.getSource();
-			
-			System.out.println("Looking at " + src.getName() + " = " + src.toString());
+			FlowNode trg = (FlowNode) e.getTarget();
+//			Vertex _src = new Vertex(src.getName()+src.getId(), "task"); // TODO need to include a node conversion like in GraphLoader
+//			Vertex _trg = new Vertex(trg.getName()+trg.getId(), "task");
+//			_src.id = src.getId();
+//			_trg.id = trg.getId();
+//			result.addV(_src);
+//			result.addV(_trg);
+//			Edge ee = new Edge(_src,_trg);
+//			result.addE(ee);
+
 		}
 		
 		
