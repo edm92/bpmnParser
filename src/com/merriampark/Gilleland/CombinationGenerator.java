@@ -2,6 +2,12 @@ package com.merriampark.Gilleland;
 
 import java.math.BigInteger;
 
+/**
+ * http://www.merriampark.com/comb.htm#Source
+ * Combination Generator
+ * by Michael Gilleland, Merriam Park Software
+ *
+ **/
 public class CombinationGenerator {
 	
 	   private int[] a;

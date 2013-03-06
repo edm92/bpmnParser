@@ -7,6 +7,15 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ *
+ * Class & methods were made to generate XML Schema's for the JSON input of BPMAI 
+ * Remove soon
+ * @deprecated Only use for generating XML schema
+ * @author Evan Morrison edm92@uowmail.edu.au http://www.fnord.be
+ * Apache License, Version 2.0, Apache License Version 2.0, January 2004 http://www.apache.org/licenses/
+ *
+ */
 public class SchemaBuilder {
 
 	/**

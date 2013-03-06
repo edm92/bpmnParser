@@ -3,6 +3,11 @@ package be.fnord.util.functions.OCP;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 
+/**
+ * Example of Order constrained Permutation function
+ * @author Evan Morrison edm92@uowmail.edu.au http://www.fnord.be
+ *
+ */
 public class Example {
 
 	public static void main(String[] args){

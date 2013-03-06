@@ -12,10 +12,18 @@ import com.google.gson.Gson;
 import be.fnord.util.processModel.Edge;
 import be.fnord.util.processModel.Graph;
 import be.fnord.util.processModel.Vertex;
+import be.fnord.util.processModel.util.GraphLoader;
 
 
-	// TODO make this a re-usable class by removing all static modifiers
-
+	
+/**
+ *
+ * TODO make this a re-usable class by removing all static modifiers
+ * 
+ * @author Evan Morrison edm92@uowmail.edu.au http://www.fnord.be
+ * Apache License, Version 2.0, Apache License Version 2.0, January 2004 http://www.apache.org/licenses/
+ *
+ */
 public class BMIJSON2Graph {
 	public static final boolean PROCESS_LEVEL = true;
 	public static final boolean TASK_LEVEL = false;
@@ -122,13 +130,15 @@ public class BMIJSON2Graph {
 						String name = task.properties.name.replaceAll("\n", "").replaceAll("\r", "").trim() + "((" + task.resourceId + "))";
 						if(task.properties.gatewaytype != null && task.properties.gatewaytype.length() > 0){
 							// This is a gateway
-							v = new Vertex(name, "gateway");
+							v = new Vertex(name, GraphLoader.ParallelGateway);
 							if("XOR".compareTo(task.properties.gatewaytype) == 0){
 								 v.isXOR = true;
+								 v.type = GraphLoader.ExclusiveGateway;
 							}else if("XOR".compareTo(task.properties.gatewaytype) == 0){
 								v.isAND = true;
 							}else if("OR".compareTo(task.properties.gatewaytype) == 0){
 								v.isOR = true;
+								v.type = GraphLoader.InclusiveGateway;
 							}else {
 								v.isXOR = true;
 							}
@@ -137,11 +147,11 @@ public class BMIJSON2Graph {
 							if(task.stencil != null && task.stencil.id != null && task.stencil.id.length() > 0
 									&& task.stencil.id.contains("Event")){
 									// New Event
-									v = new Vertex(name, "event");
+									v = new Vertex(name, GraphLoader.IntermediateThrowEvent);
 							}else{
 								// New Task
 								
-								v = new Vertex(name, "task");
+								v = new Vertex(name, GraphLoader.Task);
 							}
 						}
 						v.name = name;
