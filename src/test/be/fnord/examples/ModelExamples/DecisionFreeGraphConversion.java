@@ -32,7 +32,9 @@ public class DecisionFreeGraphConversion {
 		LinkedList<Graph<Vertex, Edge>> _decisionless = GraphTransformer.makeDecisionFree(g1);
 		LinkedList<Graph<Vertex, Edge>> decisionless = GraphTransformer.removeDupes(_decisionless); 
 		for(Graph<Vertex,Edge> g : decisionless){
-			System.out.println("Decision Free Graph: " + g);
+			GraphChecker gcc = new GraphChecker();
+			a.e.println("Decision Free Graph: " + g);
+			a.e.println("Checking if well formed results in a return of : " + gcc.CheckGraph(g));
 		}
 		return ;
 		

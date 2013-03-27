@@ -22,11 +22,12 @@ public class GraphTransformer {
 	public static boolean __INFO  = a.e.__INFO;
 	
 	/**
-	 * Remove duplicate decision free graphs.
+	 * Remove duplicate decision free graphs. 
 	 * @param duped
 	 * @return
 	 */
 	public static LinkedList<Graph<Vertex,Edge>> removeDupes(LinkedList<Graph<Vertex,Edge>> duped){
+
 		if(a.e.DEDUPING_LEVEL == a.e.NO_DEDUPING) return duped;		
 		
 		LinkedList<Graph<Vertex, Edge>> deDuped = new LinkedList<Graph<Vertex, Edge>>();
@@ -38,6 +39,7 @@ public class GraphTransformer {
 			if(!hashedDecisionFreeGraphs.contains(key)) { hashedDecisionFreeGraphs.add(key); deDuped.add(g);}
 			//else a.e.println("Found duped graph " + key);
 		}
+		
 		return deDuped;
 	}
 

@@ -141,7 +141,7 @@ public class GraphChecker {
 			g.removeVertex(g.vertexRef.get(u));
 			g.vertexRef.remove(u);
 			g.existingVertices.remove(u);
-			if(__DEBUG) a.e.println("Removed unconnected node: " + u);
+			if(__INFO) a.e.println("Removed unconnected node: " + u);
 		}
 
 		// Check if we have at least one start and end
