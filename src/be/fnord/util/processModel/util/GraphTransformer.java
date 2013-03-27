@@ -62,7 +62,6 @@ public class GraphTransformer {
 			for(String startID : startEvents){
 				
 				Vertex startEvent = g.vertexRef.get(g.vertexIDRef.get(startID));
-				System.out.println("Looking to make a graph following " + startEvent.toString());
 				// Make a new graph
 				if(startEvent != null){
 					Graph<Vertex, Edge> pg = new Graph<Vertex,Edge>(Edge.class);
@@ -78,15 +77,12 @@ public class GraphTransformer {
 				//corrected.addAll(revised);
 				result.addAll(revised); 
 			}
-			continuer = false;
 		}
 		
 		// XOR FOUND 
 		// Look for paths from each start event to our gate
-		if(continuer)
 		for(String startID : startEvents){
 			Vertex startEvent = g.vertexRef.get(g.vertexIDRef.get(startID));
-			System.out.println("Looking to multiple graphs from " + startEvent.toString() + " which has an XOR");
 			for(String gateID : splitGates){
 				Vertex gateway = g.vertexRef.get(gateID);
 				if(gateway == null) { 
@@ -97,11 +93,9 @@ public class GraphTransformer {
 				GraphPath<Vertex,Edge> gp = null;
 				try{
 					gp = pather.getShortestPath(startEvent, gateway);
-					
 				}catch(Exception e){
 					a.e.println("Error computing shortest path", a.e.FATAL);
 				}
-				
 				if(gp != null){
 					// Get vertex before the gate and list after the gate
 					Vertex predGate = null;
@@ -113,7 +107,7 @@ public class GraphTransformer {
 						succGates.add(g.getEdgeTarget(pe));
 					}
 					// Remove the gateway
-					System.out.println("Found pred of " + predGate.toString() + " with successors " + succGates.toString());
+					
 					for(Vertex successor : succGates){
 						// Now we have a path lets build a fragment
 						Graph<Vertex, Edge> pg = new Graph<Vertex,Edge>(Edge.class);
@@ -127,8 +121,6 @@ public class GraphTransformer {
 						// Join the fragments together
 						result.addAll(merge(startFragment, endFragment, predGate, successor));
 					}
-				}else{
-					System.out.println("Path from " + startEvent.toString() + " to " + gateway.toString() + "doesn't exist");
 				}
 			}
 		}
@@ -176,7 +168,7 @@ public class GraphTransformer {
 				pg.addV(startOfSucc);
 				pg.addE(new Edge(endOfPred, startOfSucc));
 				results.add(pg);
-				a.e.println("Made a graph : " + pg.toString());
+//				a.e.println("Made a graph : " + pg.toString());
 			}
 		}		
 		return results;
