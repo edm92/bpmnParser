@@ -1,4 +1,4 @@
-package ModelExample;
+package test.be.fnord.examples.ModelExamples;
 
 import be.fnord.jbpt.extend.altJSON2Process;
 import be.fnord.util.processModel.Edge;

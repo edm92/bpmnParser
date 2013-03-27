@@ -1,4 +1,4 @@
-package ModelExample;
+package test.be.fnord.examples.ModelExamples;
 
 import java.util.LinkedList;
 
@@ -15,7 +15,7 @@ import be.fnord.util.processModel.util.GraphTransformer;
  * Apache License, Version 2.0, Apache License Version 2.0, January 2004 http://www.apache.org/licenses/
  *
  */
-public class TestOfSequences {
+public class DecisionFreeGraphConversion {
 	
 	public static void main(String[] args) {
 		/////////////////////////////////////////
@@ -28,10 +28,11 @@ public class TestOfSequences {
 //		System.out.println("G1-" + g1);
 		GraphChecker gc = new GraphChecker();
 		if(!gc.CheckEventsAndGateways(g1)) a.e.println("Issue checking events and gateways"); 
-		
-		LinkedList<Graph<Vertex, Edge>> decisionless = GraphTransformer.makeDecisionFree(g1);
+
+		LinkedList<Graph<Vertex, Edge>> _decisionless = GraphTransformer.makeDecisionFree(g1);
+		LinkedList<Graph<Vertex, Edge>> decisionless = GraphTransformer.removeDupes(_decisionless); 
 		for(Graph<Vertex,Edge> g : decisionless){
-			System.out.println("G!!!!" + g);
+			System.out.println("Decision Free Graph: " + g);
 		}
 		return ;
 		

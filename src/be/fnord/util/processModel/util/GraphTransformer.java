@@ -1,6 +1,8 @@
 package be.fnord.util.processModel.util;
 
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.TreeSet;
 
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.FloydWarshallShortestPaths;
@@ -20,6 +22,55 @@ public class GraphTransformer {
 	public static boolean __INFO  = a.e.__INFO;
 	
 	/**
+	 * Remove duplicate decision free graphs.
+	 * @param duped
+	 * @return
+	 */
+	public static LinkedList<Graph<Vertex,Edge>> removeDupes(LinkedList<Graph<Vertex,Edge>> duped){
+		if(a.e.DEDUPING_LEVEL == a.e.NO_DEDUPING) return duped;		
+		
+		LinkedList<Graph<Vertex, Edge>> deDuped = new LinkedList<Graph<Vertex, Edge>>();
+		LinkedList<String> hashedDecisionFreeGraphs = new LinkedList<String>();
+		
+		for(Graph<Vertex,Edge> g: duped){
+			String key = hashDecisionFreeGraph(g);
+			
+			if(!hashedDecisionFreeGraphs.contains(key)) { hashedDecisionFreeGraphs.add(key); deDuped.add(g);}
+			//else a.e.println("Found duped graph " + key);
+		}
+		return deDuped;
+	}
+
+	
+	/**
+	 * Create a hash for a graph. This is not a really safe function as edges have been removed from the dedupe process
+	 * @param in
+	 * @return String representing a hash of a particular graph based on the edges and nodes.
+	 */
+	public static String hashDecisionFreeGraph(Graph<Vertex, Edge> in){
+		String result = "";
+		TreeSet<String> vertices = new TreeSet<String>();
+		TreeSet<String> edges = new TreeSet<String>();
+		for(Vertex v: in.vertexSet()) {
+			vertices.add((v.toString().length() < 4 ? v.toString().substring(0, v.toString().length()) : v.toString().substring(0,4) ).trim());
+		}
+		for(Edge e: in.edgeSet()) {
+			edges.add((e.id.toString().length() < 4 ? e.id.toString().substring(0, e.id.toString().length()) :  e.id.toString().substring(0,4)).trim());
+		}
+		
+		for(String s: vertices.descendingSet())
+			result += s;
+		
+		if(a.e.DEDUPING_LEVEL == a.e.SIMPLE_DEDUPING)
+		for(String s: edges.descendingSet())
+			result += s;
+		
+		
+		return result;
+	}
+	
+	
+	/**
 	 * Create a set of decision free process model from an input model. This will split models to have only one start event etc.
 	 *  
 	 * @param g Input graph
@@ -37,15 +88,22 @@ public class GraphTransformer {
 		int boundaryCounter = 0;
 		// First Check for XOR's, boundaries and multiple starts
 		for(Vertex v: g.vertexSet()){
-			if(v.isXOR) { continuer = true;
+			if(v.isXOR) { 
 							if(g.inDegreeOf(v) > 1)	// Only add in joins
-								joinGates.add(v.toString());
-							if(g.outDegreeOf(v) > 1)	// Only add in splits
-								splitGates.add(v.toString());
+								joinGates.add(v.id);
+							if(g.outDegreeOf(v) > 1){	// Only add in splits
+								splitGates.add(v.id);
+								continuer = true;
 							}
+						}
+								
 			if(v.type == GraphLoader.StartEvent) {
-				startCounter++; startEvents.add(v.id);}
+				
+				if(!startEvents.contains(v.id)){
+					startCounter++; startEvents.add(v.id);}
+			}
 		}
+
 		if(startCounter > 1) continuer = true;
 		if(boundaryCounter > 1) continuer = true;
 		
@@ -55,25 +113,39 @@ public class GraphTransformer {
 			result.add(pg);
 			return result;
 		}
-
+		if(__DEBUG){
+			a.e.print( " Joins: ");
+			for(String gateID : joinGates){
+				a.e.print(g.vertexRef.get(g.vertexIDRef.get(gateID)).toString() + ", ");
+			}
+			a.e.println("");
+			a.e.print( " Splits: ");
+			for(String gateID : splitGates){
+				a.e.print(g.vertexRef.get(g.vertexIDRef.get(gateID)).toString() + ", ");
+			}
+			a.e.println("");
+		}	
 		// Handle Multiple Starts
 		if(startCounter > 1){
 			LinkedList<Graph<Vertex, Edge>> corrected = new LinkedList<Graph<Vertex, Edge>>();
 			for(String startID : startEvents){
-				
 				Vertex startEvent = g.vertexRef.get(g.vertexIDRef.get(startID));
+
 				// Make a new graph
 				if(startEvent != null){
 					Graph<Vertex, Edge> pg = new Graph<Vertex,Edge>(Edge.class);
 					pg.copyInGraph(g, startEvent);
+//					a.e.println("Processing " + startEvent.toString());
+//					a.e.println("Starting with " + pg.toString());
 					LinkedList<Graph<Vertex, Edge>> revised = makeDecisionFree(pg);
 					corrected.addAll(revised);
+//					a.e.println("Got: " + revised.toString());
 				}
 			}
-			// Send each of the new subgraphs to the function again to deal with any and all XOR's
-			
+			// Send each of the new subgraphs to the function again to deal with any and all XOR's			
 			for(Graph<Vertex, Edge> current : corrected){
 				LinkedList<Graph<Vertex, Edge>> revised = makeDecisionFree(current);
+				
 				//corrected.addAll(revised);
 				result.addAll(revised); 
 			}
@@ -81,14 +153,21 @@ public class GraphTransformer {
 		
 		// XOR FOUND 
 		// Look for paths from each start event to our gate
+		
 		for(String startID : startEvents){
+		
 			Vertex startEvent = g.vertexRef.get(g.vertexIDRef.get(startID));
+			if(__DEBUG) a.e.println("Processing " + startEvent.toString());
 			for(String gateID : splitGates){
-				Vertex gateway = g.vertexRef.get(gateID);
-				if(gateway == null) { 
+				// Small amount of error checking
+				if(g.vertexIDRef.get(gateID) == null) { 
 					if(__DEBUG) a.e.println("Can't find gateway " + gateID + " skipping fragmenting");
 					continue;
 				}
+				
+				Vertex gateway = g.vertexRef.get(g.vertexIDRef.get(gateID));
+				if(__DEBUG) a.e.println("Gateway: " + gateway.toString());
+				
 				FloydWarshallShortestPaths<Vertex, Edge> pather = new FloydWarshallShortestPaths<Vertex, Edge>(g);
 				GraphPath<Vertex,Edge> gp = null;
 				try{
@@ -113,14 +192,18 @@ public class GraphTransformer {
 						Graph<Vertex, Edge> pg = new Graph<Vertex,Edge>(Edge.class);
 						pg.copyInGraph(g, startEvent, predGate);
 						LinkedList<Graph<Vertex, Edge>> startFragment = makeDecisionFree(pg);
-						//System.out.println("222Made graph " + pg.toString());
+//						a.e.println("222Made graph " + pg.toString());
 
 						Graph<Vertex, Edge> pg2 = new Graph<Vertex,Edge>(Edge.class);
 						pg2.copyInGraph(g, successor);
+//						a.e.println("Now working on " + pg2.toString());
 						LinkedList<Graph<Vertex, Edge>> endFragment = makeDecisionFree(pg2);
 						// Join the fragments together
-						result.addAll(merge(startFragment, endFragment, predGate, successor));
+						// Replaced predGate with gateway to try to include gateway node
+						result.addAll(merge(startFragment, endFragment, predGate, gateway, successor));
 					}
+				}else{
+					if(__DEBUG) a.e.println("GP was null for " + " from " + startEvent + " to " + gateway ); 
 				}
 			}
 		}
@@ -157,7 +240,7 @@ public class GraphTransformer {
 		return result;
 	}
 	
-	public static LinkedList<Graph<Vertex, Edge>> merge(LinkedList<Graph<Vertex, Edge>> startFrags, LinkedList<Graph<Vertex, Edge>> endFrags, Vertex endOfPred, Vertex startOfSucc){
+	public static LinkedList<Graph<Vertex, Edge>> merge(LinkedList<Graph<Vertex, Edge>> startFrags, LinkedList<Graph<Vertex, Edge>> endFrags, Vertex endOfPred, Vertex gateway, Vertex startOfSucc){
 		LinkedList<Graph<Vertex, Edge>> results = new LinkedList<Graph<Vertex, Edge>>();
 		for(Graph<Vertex, Edge> predFrag : startFrags){
 			for(Graph<Vertex, Edge> succFrag : endFrags){
@@ -165,8 +248,10 @@ public class GraphTransformer {
 				pg.copyInGraph(predFrag);
 				pg.copyInGraph(succFrag);
 				pg.addV(endOfPred);
+				pg.addV(gateway);
 				pg.addV(startOfSucc);
-				pg.addE(new Edge(endOfPred, startOfSucc));
+				pg.addE(new Edge(endOfPred, gateway));
+				pg.addE(new Edge(gateway, startOfSucc));
 				results.add(pg);
 //				a.e.println("Made a graph : " + pg.toString());
 			}

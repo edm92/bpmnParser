@@ -384,7 +384,7 @@ public class GraphLoader {
 			return;
 		}
 		if (hashCode == MessageFlow){
-			if((getMessages & a.e.DONT_SAVE_MESSAGES_AND_PARTICIPANTS) > 0 || true) return;
+			if((getMessages & a.e.DONT_SAVE_MESSAGES_AND_PARTICIPANTS) > 0 ) return;
 			
 			MessageFlow r = (MessageFlow)_ele;
 			TEdge myEdge = new TEdge(r.getId(), r.getName(),r.getSourceRef(), r.getTargetRef() , SequenceFlow, _ele);

@@ -21,8 +21,14 @@ public class e {
 	public static boolean __LOGGER = true;
 	
 	public static final int NO_FLAGS = 0;
-	public static final int DONT_SAVE_MESSAGES_AND_PARTICIPANTS= 1;
-	// 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384 32768 65536
+	public static final int DONT_SAVE_MESSAGES_AND_PARTICIPANTS= 1;		// Don't bother with message flows between pools or between actors
+	
+	public static final int AGGRESSIVE_DEDUPING = 1;	// Don't consider edges, if you find that edges are being removed then change to simple
+	public static final int SIMPLE_DEDUPING = 2; 		// Consider edges, this edges up leaving lots of duplicates. 
+														// See GraphTransformer for implementation to see ifyou can make it better?
+	public static final int NO_DEDUPING = 3;
+	
+	public static int DEDUPING_LEVEL = AGGRESSIVE_DEDUPING; // See above
 
 	
 	public static final int FATAL = 5;

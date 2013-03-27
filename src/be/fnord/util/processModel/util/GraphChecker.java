@@ -105,6 +105,7 @@ public class GraphChecker {
 				v.type = GraphLoader.ExclusiveGateway;
 				v.isOR = false;
 				v.isXOR = true;
+				v.isGateway = true;
 			}
 		}
 		for(Vertex v: multiOuts){
@@ -113,10 +114,14 @@ public class GraphChecker {
 			v2.isGateway = true;
 			v2.isXOR = true;
 			g.addV(v2);
+			LinkedList<Edge> removeListEdges = new LinkedList<Edge>();
 			for(Edge e: g.outgoingEdgesOf(v)){
+				removeListEdges.add(e);
+				Edge ee = new Edge(v2, e.getTarget());
+				g.addE(ee);
+			}
+			for(Edge e : removeListEdges){
 				g.removeE(e);
-				e.setSource(v2);
-				g.addE(e);
 			}
 			Edge e = new Edge(v, v2);
 			g.addE(e);
@@ -162,26 +167,40 @@ public class GraphChecker {
 		}
 		for(Vertex v: fixXORs){
 			if(g.outDegreeOf(v) > 1){
-				Vertex v2 = new Vertex("newXORGate-" + UUID.randomUUID(), v.type);
+				Vertex v2 = new Vertex("newXORGate-" + UUID.randomUUID(), GraphLoader.ExclusiveGateway);
+				v2.isXOR = true;
+				v2.isGateway = true;
+
 				g.addV(v2);
-				
+
+				LinkedList<Edge> removeListEdges = new LinkedList<Edge>();
 				for(Edge e: g.outgoingEdgesOf(v)){
-					g.removeE(e);
-					e.setSource(v2);
-					g.addE(e);
+					Edge ee = new Edge(v2, e.getTarget());
+					ee.setName(e.name);
+					removeListEdges.add(e);
+					g.addE(ee);
 				}
+				for(Edge e: removeListEdges)
+					g.removeE(e);
 				g.addE(new Edge(v, v2));
 				if(g.inDegreeOf(v) > 1 && g.outDegreeOf(v) > 1){
 					fixDoubles.add(v);
 				}
 			}
 			if(g.inDegreeOf(v) > 1){
-				Vertex v2 = new Vertex("newXORGate-" + UUID.randomUUID(), v.type);
+				Vertex v2 = new Vertex("newXORGate-" + UUID.randomUUID(), GraphLoader.ExclusiveGateway);
+				v2.isXOR = true;
+				v2.isGateway = true;
 				g.addV(v2);
+				LinkedList<Edge> removeListEdges = new LinkedList<Edge>();
 				for(Edge e: g.incomingEdgesOf(v)){
+					Edge ee = new Edge(e.getSource(), v2);
+					ee.setName(e.name);
+					removeListEdges.add(e);
+					g.addE(ee);
+				}
+				for(Edge e: removeListEdges){
 					g.removeE(e);
-					e.setTarget(v2);
-					g.addE(e);
 				}
 				g.addE(new Edge(v2, v));
 				if(g.inDegreeOf(v) > 1 && g.outDegreeOf(v) > 1){
