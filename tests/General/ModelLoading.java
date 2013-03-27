@@ -6,9 +6,9 @@ import org.junit.Test;
 
 import be.fnord.util.processModel.Edge;
 import be.fnord.util.processModel.Graph;
-import be.fnord.util.processModel.GraphChecker;
-import be.fnord.util.processModel.GraphLoader;
 import be.fnord.util.processModel.Vertex;
+import be.fnord.util.processModel.util.GraphChecker;
+import be.fnord.util.processModel.util.GraphLoader;
 
 public class ModelLoading {
 

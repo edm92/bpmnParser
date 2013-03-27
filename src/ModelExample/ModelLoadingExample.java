@@ -1,17 +1,18 @@
 package ModelExample;
 
-import java.util.LinkedList;
-
 import be.fnord.jbpt.extend.altJSON2Process;
 import be.fnord.util.processModel.Edge;
 import be.fnord.util.processModel.Graph;
-import be.fnord.util.processModel.GraphChecker;
-import be.fnord.util.processModel.GraphLoader;
-import be.fnord.util.processModel.PGraph;
 import be.fnord.util.processModel.Vertex;
 import be.fnord.util.processModel.io.BMIJSON2Graph;
+import be.fnord.util.processModel.util.GraphChecker;
+import be.fnord.util.processModel.util.GraphLoader;
 
-
+/**
+ * 
+ * @author Evan Morrison edm92@uowmail.edu.au http://www.fnord.be
+ * Apache License, Version 2.0, Apache License Version 2.0, January 2004 http://www.apache.org/licenses/
+ */
 public class ModelLoadingExample {
 	
 	
@@ -48,46 +49,14 @@ public class ModelLoadingExample {
 		System.out.println("Displaying JSON based model:" + g4.toString());
 		System.out.println("G4 Test: " + g2Checker.CheckGraph(g4));
 		
-		//PGraph<Vertex,Edge> seqPGraph = seqComp(g1, g2);
-		//System.out.println("PG-" + seqPGraph);
 		
 		return ;
 		
 	}
 	
-	public static LinkedList<PGraph<Vertex, Edge>> makeDecisionFree(Graph<Vertex,Edge> g){
-		LinkedList<PGraph<Vertex, Edge>> result = new LinkedList<PGraph<Vertex, Edge>>();
-		boolean continuer = false;
-		// First Check for XOR's
-		for(Vertex v: g.vertexSet()){
-			if(v.isXOR) continuer = true;
-		}
-		if(!continuer) { // No XOR's found 
-			PGraph<Vertex, Edge> pg = new PGraph<Vertex,Edge>(Edge.class);
-			pg.copyInGraph(g);
-			result.add(pg);
-			return result;
-		}
-		// XOR's found, lets remove all joins
-		// while searching lets save start/end points
-//		TreeMap<String, String> startEnds = new TreeMap<String,String>();
-//		LinkedList<String> gates = new LinkedList<String>();
-//		for(Edge e: g.edgeSet()){
-//			
-//		}
-		
-		
-		return result;
-	}
+
 	
 	
-	
-	public static PGraph<Vertex,Edge> seqComp(Graph<Vertex,Edge> lhs, Graph<Vertex,Edge> rhs ){
-		PGraph<Vertex,Edge> result = new PGraph<Vertex,Edge>(Edge.class);
-		
-		
-		return result;
-	}
 	
 
 }

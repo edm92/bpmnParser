@@ -1,5 +1,6 @@
-package be.fnord.util.processModel;
+package be.fnord.util.processModel.util;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -8,6 +9,17 @@ import org.jgrapht.GraphPath;
 import org.jgrapht.alg.KShortestPaths;
 import org.jgrapht.alg.StrongConnectivityInspector;
 
+import be.fnord.util.processModel.Edge;
+import be.fnord.util.processModel.Graph;
+import be.fnord.util.processModel.Vertex;
+
+/**
+ * The following class is used to check the well formedness of a graph. The main method CheckGraph will also modify the graph as
+ * best as possible to 'fix' any issues that would cause other functions to barf. After loading a graph it should be run through 
+ * the Check class.
+ * @author Evan Morrison edm92@uowmail.edu.au http://www.fnord.be
+ * Apache License, Version 2.0, Apache License Version 2.0, January 2004 http://www.apache.org/licenses/
+ */
 public class GraphChecker {
 	public static boolean __DEBUG = a.e.__DEBUG;
 	public static boolean __INFO  = a.e.__INFO;
@@ -32,7 +44,7 @@ public class GraphChecker {
 		int closeAND = 0;
 		for(Vertex v: g.vertexSet()){
 			// Count number of gateways first
-			if(v.type.compareToIgnoreCase("gateway") == 0){
+			if(v.isGateway){
 				if(v.getCorresponding() == null && !v.isXOR) {	// Check if we labeled a corresponding gateway
 					if(__DEBUG) a.e.println("Didn't find a corresponding gate for " + v.toString());
 					return false;
@@ -55,28 +67,61 @@ public class GraphChecker {
 		return false;
 	}
 	
-	
-	/**
-	 * Check the graph for good structures, fix some if possible and remove the rest
-	 * This function will add a substructural start and end node to the process which means that the process will only end 
-	 * up with a single start and a single end. 
-	 * @return True if good structured model, false if badly structured model beyond repair
-	 */
-	public boolean CheckGraph(Graph<Vertex,Edge> g){
-		// Find the start and end nodes, then check if strongly connected.
+	public boolean CheckEventsAndGateways(Graph<Vertex, Edge> g){
+		LinkedList<Vertex> multiOuts = new LinkedList<Vertex>();
+		LinkedList<String> unconnectedNodes = new LinkedList<String>();
+
+		// Find the start and end nodes, make sure we know what they are
+		// Hunt out any boundaries and create an edge to them
 		for(Vertex v: g.vertexSet() ){
 			// Check if start node
 			if(g.inDegreeOf(v) == 0){
 				startNodes.add(v.toString());
+				v.type = GraphLoader.StartEvent;
 			}
 			// Check if end node
 			if(g.outDegreeOf(v) == 0){
 				endNodes.add(v.toString());
+				v.type = GraphLoader.EndEvent;
+			}
+			// Check if there is a boundary and create an edge between the node and the boundary 
+			if(v.boundaryRefs.size() > 0){
+				for(String ref: v.boundaryRefs){
+					if(g.vertexIDRef.containsKey(ref)){
+						// Create an edge between the two
+						String NAME = g.vertexIDRef.get(ref);
+						Vertex v2 = g.vertexRef.get(NAME);
+						Edge e = new Edge(v, v2);
+						g.addE(e);
+					}
+				}
+			}
+			// Find tasks with multi outgoing edges and create XOR gateway
+			if(g.outDegreeOf(v) > 1 && !v.isGateway){
+				multiOuts.add(v);
+			}
+			// Convert OR's to and/XORS -- Analyst note, should not model with OR's
+			if(v.type == GraphLoader.InclusiveGateway){
+				v.type = GraphLoader.ExclusiveGateway;
+				v.isOR = false;
+				v.isXOR = true;
 			}
 		}
-		
+		for(Vertex v: multiOuts){
+			Vertex v2 = new Vertex("subGate" + UUID.randomUUID(), GraphLoader.ExclusiveGateway);
+			v2.isSubstructural = true;
+			v2.isGateway = true;
+			v2.isXOR = true;
+			g.addV(v2);
+			for(Edge e: g.outgoingEdgesOf(v)){
+				g.removeE(e);
+				e.setSource(v2);
+				g.addE(e);
+			}
+			Edge e = new Edge(v, v2);
+			g.addE(e);
+		}
 		// Go through list looking for elements in both
-		LinkedList<String> unconnectedNodes = new LinkedList<String>();
 		for(String s: startNodes){
 			for(String e: endNodes){
 				if(s.compareTo(e) == 0){
@@ -93,27 +138,96 @@ public class GraphChecker {
 			g.existingVertices.remove(u);
 			if(__DEBUG) a.e.println("Removed unconnected node: " + u);
 		}
-		
+
 		// Check if we have at least one start and end
 		if(!(startNodes.size() > 0 && endNodes.size() > 0)) return false;
-		
-		// Create copy of graph and connect the ends to the starts
-		Graph <Vertex,Edge> copy = g.copyGraph(g);
-		for(String s: startNodes){
-			for(String e: endNodes){
-				Edge newEdge = new Edge(g.vertexRef.get(e), g.vertexRef.get(s));
-				copy.addE(newEdge);
+
+		HashSet<Vertex> fixDoubles = new HashSet<Vertex>();
+		HashSet<Vertex> fixXORs = new HashSet<Vertex>();
+		// Test all non-gateway nodes for only one entry and one exit
+		for(Vertex v: g.vertexSet()){
+			if(!(v.isAND || v.isXOR || v.isOR)){
+				if(g.inDegreeOf(v) > 1 || g.outDegreeOf(v) > 1){
+					if(__DEBUG) a.e.println("Vertex " + v.name + " has a large in/out degree for a non-gateway, converting to XOR");
+					fixXORs.add(v);
+					// removed return false
+				}
+			}else{	// Ensure that gateways are either a split or a join
+				if(g.inDegreeOf(v) > 1 && g.outDegreeOf(v) > 1){
+					if(__DEBUG) a.e.println("Gateway " + v.name + " is used as both a split and a join.");
+					fixDoubles.add(v); 
+					// removed return false
+				}
 			}
 		}
-		// Check if each node is reachable
-		StrongConnectivityInspector<Vertex, Edge> sci =
-	            new StrongConnectivityInspector<Vertex,Edge>(copy);
-		if(!sci.isStronglyConnected()) return false;
+		for(Vertex v: fixXORs){
+			if(g.outDegreeOf(v) > 1){
+				Vertex v2 = new Vertex("newXORGate-" + UUID.randomUUID(), v.type);
+				g.addV(v2);
+				
+				for(Edge e: g.outgoingEdgesOf(v)){
+					g.removeE(e);
+					e.setSource(v2);
+					g.addE(e);
+				}
+				g.addE(new Edge(v, v2));
+				if(g.inDegreeOf(v) > 1 && g.outDegreeOf(v) > 1){
+					fixDoubles.add(v);
+				}
+			}
+			if(g.inDegreeOf(v) > 1){
+				Vertex v2 = new Vertex("newXORGate-" + UUID.randomUUID(), v.type);
+				g.addV(v2);
+				for(Edge e: g.incomingEdgesOf(v)){
+					g.removeE(e);
+					e.setTarget(v2);
+					g.addE(e);
+				}
+				g.addE(new Edge(v2, v));
+				if(g.inDegreeOf(v) > 1 && g.outDegreeOf(v) > 1){
+					fixDoubles.add(v);
+				}
+			}
+		}
 		
-		// Finally add structural nodes for multi-starts/multi-ends
+		for(Vertex v : fixDoubles){
+			Vertex v2 = new Vertex("newXORGate-" + UUID.randomUUID(), v.type);
+			g.addV(v2);
+			for(Edge e: g.outgoingEdgesOf(v)){
+				g.removeE(e);
+				e.setSource(v2);
+				g.addE(e);
+			}
+			g.addE(new Edge(v, v2));
+		}
+		
+		// Fix splits and joins labels
+		for(Vertex v : g.vertexSet()){
+			if(g.inDegreeOf(v) > 1) v.isJoin = true;
+			if(g.outDegreeOf(v) > 2) v.isSplit = true;
+			if(v.isSplit && v.isJoin){
+				a.e.println("GraphChecker.CheckEventsAndGateways failed to fix splits and joins on " + v.toString());
+				return false;
+			}
+		}
+		
+		
+		return true;
+	}
+	
+	/**
+	 * Check the graph for good structures, fix some if possible and remove the rest
+	 * This function will add a substructural start and end node to the process which means that the process will only end 
+	 * up with a single start and a single end. 
+	 * @return True if good structured model, false if badly structured model beyond repair
+	 */
+	public boolean CheckGraph(Graph<Vertex,Edge> g){
+		// Fix the gateways and boundaries first
+		if(!CheckEventsAndGateways(g)) return false;
+		
 		// This includes a parallel gateway for splitting multiplestarts
 		if(startNodes.size() > 1){
-			Vertex newStart = new Vertex("newStart-" + UUID.randomUUID(), "gateway");
+			Vertex newStart = new Vertex("newStart-" + UUID.randomUUID(), GraphLoader.ParallelGateway);
 			newStart.isAND = true; 
 			newStart.isSplit = true;
 			newStart.isSubstructural = true;
@@ -128,14 +242,14 @@ public class GraphChecker {
 		}else g.trueStart = g.vertexRef.get(startNodes.get(0));
 		
 		if(endNodes.size() > 1){
-			Vertex newEnd = new Vertex("newEnd-" + UUID.randomUUID(), "gateway");
+			Vertex newEnd = new Vertex("newEnd-" + UUID.randomUUID(), GraphLoader.ParallelGateway);
 			newEnd.isAND = true;
 			newEnd.isJoin = true;
 			newEnd.isSubstructural = true;
 			g.addV(newEnd);
 			g.trueEnd = newEnd;
 			
-			if(g.trueStart.type.compareTo("gateway") == 0) g.trueStart.setCorresponding(newEnd);
+			if(g.trueStart.type ==  GraphLoader.ParallelGateway) g.trueStart.setCorresponding(newEnd);
 			for(String s: startNodes){
 				// Create edge to each node
 				Edge newEdge = new Edge(g.vertexRef.get(s), newEnd );
@@ -143,8 +257,8 @@ public class GraphChecker {
 			}
 		}else g.trueEnd = g.vertexRef.get(endNodes.get(0));
 		// Do cleanup (add in missing gateway to start of process)
-		if(g.trueEnd.type.compareTo("gateway") == 0 && g.trueEnd.corresponding == null){
-			Vertex newStartGate = new Vertex("newStartGate-" + UUID.randomUUID(), "gateway");
+		if(g.trueEnd.type==  GraphLoader.ParallelGateway && g.trueEnd.corresponding == null){
+			Vertex newStartGate = new Vertex("newStartGate-" + UUID.randomUUID(),  GraphLoader.ParallelGateway);
 			newStartGate.isAND = true; 
 			newStartGate.isSplit = true;
 			newStartGate.isSubstructural = true;
@@ -165,8 +279,8 @@ public class GraphChecker {
 			g.addE(newEdge);
 		}
 		// Add in missing gateway to the end of process
-		if(g.trueStart.type.compareTo("gateway") == 0 && g.trueStart.corresponding == null){
-			Vertex newEndGate = new Vertex("newEndGate-" + UUID.randomUUID(), "gateway");
+		if(g.trueStart.type ==  GraphLoader.ParallelGateway && g.trueStart.corresponding == null){
+			Vertex newEndGate = new Vertex("newEndGate-" + UUID.randomUUID(),  GraphLoader.ParallelGateway);
 			newEndGate.isAND = true; 
 			newEndGate.isSplit = true;
 			newEndGate.isSubstructural = true;
@@ -188,25 +302,23 @@ public class GraphChecker {
 		}
 
 		
-		
-		// Test all non-gateway nodes for only one entry and one exit
-		for(Vertex v: g.vertexSet()){
-			if(!(v.isAND || v.isXOR || v.isOR)){
-				if(g.inDegreeOf(v) > 1 || g.outDegreeOf(v) > 1){
-					if(__DEBUG) a.e.println("Vertex " + v.name + " has a large in/out degree for a non-gateway");
-					return false;
-				}
-			}else{	// Ensure that gateways are either a split or a join
-				if(g.inDegreeOf(v) > 1 && g.outDegreeOf(v) > 1){
-					if(__DEBUG) a.e.println("Gateway " + v.name + " is used as both a split and a join.");
-					return false;
-				}
+		// Create copy of graph and connect the ends to the starts
+		Graph <Vertex,Edge> copy = g.copyGraph(g);
+		for(String s: startNodes){
+			for(String e: endNodes){
+				Edge newEdge = new Edge(g.vertexRef.get(e), g.vertexRef.get(s));
+				copy.addE(newEdge);
 			}
 		}
-		
+		// Check if each node is reachable
+		StrongConnectivityInspector<Vertex, Edge> sci =
+	            new StrongConnectivityInspector<Vertex,Edge>(copy);
+		if(!sci.isStronglyConnected()) return false;
+
 		// Check if there are correct gateways
 		fixGateways(g); // See if we can fix the gateways first then test them
 		if(!testGateways(g)) return false;
+		
 		
 		return true;
 	        
@@ -224,7 +336,7 @@ public class GraphChecker {
 		boolean result = true;
 		for(Vertex v: g.vertexSet()){
 			// Count number of gateways first
-			if(v.type.compareToIgnoreCase("gateway") == 0){
+			if(v.type ==  GraphLoader.ParallelGateway){
 				if(g.inDegreeOf(v) > 1) closeAND++;
 				if(g.outDegreeOf(v) > 1) openAND++;
 			}
@@ -264,7 +376,7 @@ public class GraphChecker {
 			//System.err.println("Starting with " + start);
 			do{		
 				if(current == null) break;
-				if(current.type.compareToIgnoreCase("gateway") == 0){
+				if(current.type == GraphLoader.ParallelGateway){
 					if(g.inDegreeOf(current) > 1){
 						scoreTallyIn.put(current.name, g.inDegreeOf(current));
 						gateways.add(current.name);
@@ -308,7 +420,7 @@ public class GraphChecker {
 			//System.err.println("Starting with " + start);
 			do{		
 				if(current == null) break;
-				if(current.type.compareToIgnoreCase("gateway") == 0){
+				if(current.type == GraphLoader.ParallelGateway){
 					//scoreTallyIn.put(current.name, 0);
 					if(g.inDegreeOf(current) > 1){
 						// gatway join

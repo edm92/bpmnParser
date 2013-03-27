@@ -2,7 +2,13 @@ package be.fnord.util.functions.OCP;
 import java.util.HashSet;
 import java.util.List;
 
-
+/**
+ * 
+ * @author Evan Morrison edm92@uowmail.edu.au http://www.fnord.be
+ * Apache License, Version 2.0, Apache License Version 2.0, January 2004 http://www.apache.org/licenses/
+ * 
+ * @param <T> currently I think it's mainly only been tested with a String. I think that the main requirement of the template value is that it has a decent toString method (and perhaps a split?)
+ */
 public class OrderConstrainedPartitionList <T> {
 	 
 	/*

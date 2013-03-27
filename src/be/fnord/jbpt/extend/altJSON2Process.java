@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import org.jbpt.pm.ControlFlow;
-import org.jbpt.pm.FlowNode;
 import org.jbpt.pm.ProcessModel;
 import org.jbpt.pm.io.JSON2Process;
 import org.jbpt.throwable.SerializationException;
@@ -18,8 +17,9 @@ import be.fnord.util.processModel.Vertex;
 
 /**
  * This class loads an inputted JSON string using JSON2Process in jbpt and then converts the processModel into a graph structure.
- * @author edm92
- *
+ * TODO the main convert method is currently not completed. 
+ * @author Evan Morrison edm92@uowmail.edu.au http://www.fnord.be
+ * Apache License, Version 2.0, Apache License Version 2.0, January 2004 http://www.apache.org/licenses/
  */
 public class altJSON2Process {
 
@@ -36,9 +36,12 @@ public class altJSON2Process {
 		if(jbptProcess == null) return null;
 		
 		// Lets copy the process to a graph
+		//TODO this code fragment is broken. Please fix
 		for(ControlFlow<?> e: jbptProcess.getEdges()){
-			FlowNode src = (FlowNode) e.getSource();
-			FlowNode trg = (FlowNode) e.getTarget();
+			a.e.println("altJSON2Process.convert(String name, String json) is not completed. This method needs to be fixed!", a.e.DEBUG);
+			if(e!=null) break; // Remove me
+//			FlowNode src = (FlowNode) e.getSource();
+//			FlowNode trg = (FlowNode) e.getTarget();
 //			Vertex _src = new Vertex(src.getName()+src.getId(), "task"); // TODO need to include a node conversion like in GraphLoader
 //			Vertex _trg = new Vertex(trg.getName()+trg.getId(), "task");
 //			_src.id = src.getId();

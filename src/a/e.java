@@ -4,6 +4,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
+/**
+ * General utilities
+ * @author Evan Morrison edm92@uowmail.edu.au http://www.fnord.be
+ * Apache License, Version 2.0, Apache License Version 2.0, January 2004 http://www.apache.org/licenses/
+ * 
+ */
 public class e {
 	public static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	
@@ -13,6 +19,11 @@ public class e {
 	public static boolean __HIGHDETAILS = false;
 	
 	public static boolean __LOGGER = true;
+	
+	public static final int NO_FLAGS = 0;
+	public static final int DONT_SAVE_MESSAGES_AND_PARTICIPANTS= 1;
+	// 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384 32768 65536
+
 	
 	public static final int FATAL = 5;
 	public static final int DEBUG = 3;
