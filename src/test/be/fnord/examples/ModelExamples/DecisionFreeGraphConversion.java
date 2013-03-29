@@ -24,7 +24,7 @@ public class DecisionFreeGraphConversion {
 		//// Real start of program below	/////
 		/////////////////////////////////////////
 		
-		Graph<Vertex,Edge> g1 = GraphLoader.loadModel("models/Model1.bpmn20.xml", a.e.DONT_SAVE_MESSAGES_AND_PARTICIPANTS);
+		Graph<Vertex,Edge> g1 = GraphLoader.loadModel("models/MultiGateTest.bpmn20.xml", a.e.DONT_SAVE_MESSAGES_AND_PARTICIPANTS);
 //		System.out.println("G1-" + g1);
 		GraphChecker gc = new GraphChecker();
 		if(!gc.CheckEventsAndGateways(g1)) a.e.println("Issue checking events and gateways"); 
@@ -33,8 +33,12 @@ public class DecisionFreeGraphConversion {
 		LinkedList<Graph<Vertex, Edge>> decisionless = GraphTransformer.removeDupes(_decisionless); 
 		for(Graph<Vertex,Edge> g : decisionless){
 			GraphChecker gcc = new GraphChecker();
+			boolean isgood = gcc.CheckGraph(g);
 			a.e.println("Decision Free Graph: " + g);
-			a.e.println("Checking if well formed results in a return of : " + gcc.CheckGraph(g));
+			a.e.println("Checking if well formed results in a return of : " + isgood);
+			if(isgood){
+				g.toView();
+			}
 		}
 		return ;
 		

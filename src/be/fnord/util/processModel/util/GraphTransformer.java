@@ -1,6 +1,5 @@
 package be.fnord.util.processModel.util;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.TreeSet;
 
@@ -9,6 +8,7 @@ import org.jgrapht.alg.FloydWarshallShortestPaths;
 
 import be.fnord.util.processModel.Edge;
 import be.fnord.util.processModel.Graph;
+import be.fnord.util.processModel.Trace;
 import be.fnord.util.processModel.Vertex;
 
 /**
@@ -20,6 +20,31 @@ import be.fnord.util.processModel.Vertex;
 public class GraphTransformer {
 	public static boolean __DEBUG = a.e.__DEBUG;
 	public static boolean __INFO  = a.e.__INFO;
+	
+	/**
+	 * Create Trace
+	 */
+	public static LinkedList<Trace<Vertex,Edge>> createTraces(LinkedList<Graph<Vertex,Edge>> models){
+		LinkedList<Trace<Vertex,Edge>> results = new LinkedList<Trace<Vertex,Edge>>();
+		
+		for(Graph<Vertex,Edge> g: models){
+			// Should we dedupe this too?
+			results.addAll(createTrace(g));
+		}
+		
+		return results;
+	}
+	
+	public static LinkedList<Trace<Vertex,Edge>> createTrace(Graph<Vertex,Edge> g){
+		LinkedList<Trace<Vertex,Edge>> results = new LinkedList<Trace<Vertex,Edge>>();
+		
+		// All input models should be decisionfree models, so we need to first check for parallel gateways. 
+		// Break down the model into sections of parallel and non parallel paths
+		// Then combine each non-parallel path with OCP instances of the parallel path.  
+		
+		return results;
+	}
+	
 	
 	/**
 	 * Remove duplicate decision free graphs. 
@@ -45,7 +70,8 @@ public class GraphTransformer {
 
 	
 	/**
-	 * Create a hash for a graph. This is not a really safe function as edges have been removed from the dedupe process
+	 * Create a hash for a graph. Function can be configured by setting DEDUPING_LEVEL in a.e class. 
+	 * Not a great method and could use some improvement in the future
 	 * @param in
 	 * @return String representing a hash of a particular graph based on the edges and nodes.
 	 */
@@ -137,11 +163,11 @@ public class GraphTransformer {
 				if(startEvent != null){
 					Graph<Vertex, Edge> pg = new Graph<Vertex,Edge>(Edge.class);
 					pg.copyInGraph(g, startEvent);
-//					a.e.println("Processing " + startEvent.toString());
-//					a.e.println("Starting with " + pg.toString());
+					if(__DEBUG) a.e.println("Processing " + startEvent.toString());
+					if(__DEBUG) a.e.println("Starting with " + pg.toString());
 					LinkedList<Graph<Vertex, Edge>> revised = makeDecisionFree(pg);
 					corrected.addAll(revised);
-//					a.e.println("Got: " + revised.toString());
+					if(__DEBUG) a.e.println("Got: " + revised.toString());
 				}
 			}
 			// Send each of the new subgraphs to the function again to deal with any and all XOR's			
@@ -192,13 +218,14 @@ public class GraphTransformer {
 					for(Vertex successor : succGates){
 						// Now we have a path lets build a fragment
 						Graph<Vertex, Edge> pg = new Graph<Vertex,Edge>(Edge.class);
-						pg.copyInGraph(g, startEvent, predGate);
+						pg.copyInGraph(g, startEvent, gateway);
+						pg.removeV(gateway);
 						LinkedList<Graph<Vertex, Edge>> startFragment = makeDecisionFree(pg);
-//						a.e.println("222Made graph " + pg.toString());
+						if(__DEBUG) a.e.println("222Made graph " + pg.toString());
 
 						Graph<Vertex, Edge> pg2 = new Graph<Vertex,Edge>(Edge.class);
 						pg2.copyInGraph(g, successor);
-//						a.e.println("Now working on " + pg2.toString());
+						if(__DEBUG) a.e.println("Now working on " + pg2.toString());
 						LinkedList<Graph<Vertex, Edge>> endFragment = makeDecisionFree(pg2);
 						// Join the fragments together
 						// Replaced predGate with gateway to try to include gateway node
@@ -209,34 +236,6 @@ public class GraphTransformer {
 				}
 			}
 		}
-		
-//		// Remove XOR joins
-//		// XOR's found, lets first remove all joins
-//		// 
-//		for(String gateID : joinGates){
-//			Vertex gateway = g.vertexRef.get(gateID);
-//			if(gateway == null) {
-//				if(__DEBUG) a.e.println("Can't find " + gateID + " skipping");
-//				continue;
-//			}
-//			if(gateway.type == GraphLoader.ExclusiveGateway && gateway.isJoin){
-//				// Remove
-//				LinkedList<Edge> inEdges = new LinkedList<Edge>();
-//				for(Edge e : g.incomingEdgesOf(gateway))
-//					inEdges.add(e);
-//				Edge outEdge = null ;
-//				for(Edge e: g.outgoingEdgesOf(gateway))
-//					outEdge = e;
-//				if(outEdge == null){ a.e.println("Error here!",a.e.FATAL);}; 
-//				for(Edge e: inEdges){
-//					g.removeE(e);
-//					e.setTarget(outEdge.target);
-//					g.addE(e);
-//				}
-//				g.removeE(outEdge);
-//			}
-//		}
-//			
 		
 		
 		return result;

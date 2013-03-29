@@ -17,6 +17,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 
 import be.fnord.util.processModel.Edge;
 import be.fnord.util.processModel.Vertex;
+import be.fnord.util.processModel.visual.jungViewer;
 
 
 /**
@@ -282,5 +283,10 @@ public class Graph<v extends Vertex , e extends Edge> extends DefaultDirectedGra
 	
 	private static final long serialVersionUID = 1L;
 
+	@SuppressWarnings("unchecked")
+	public void toView(){
+		jungViewer jv = new jungViewer();
+		jv.displayGraph((Graph<Vertex, Edge>) this,this.name);
+	}
 
 }

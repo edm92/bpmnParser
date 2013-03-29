@@ -1,14 +1,19 @@
-package be.fnord.util.functions.OCP;
+package test.be.fnord.examples.functions;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+
+import be.fnord.util.functions.OCP.OrderConstrainedPartitionList;
+import be.fnord.util.functions.OCP.PartitionList;
+import be.fnord.util.functions.OCP.PartitionListElement;
+import be.fnord.util.functions.OCP.PartitionListItem;
 
 /**
  * Example of Order constrained Permutation function
  * @author Evan Morrison edm92@uowmail.edu.au http://www.fnord.be
  *
  */
-public class Example {
+public class OCPExample {
 
 	public static void main(String[] args){
 		// Example of creating a set and partitioning it:
