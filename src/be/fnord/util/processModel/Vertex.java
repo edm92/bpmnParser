@@ -1,6 +1,7 @@
 package be.fnord.util.processModel;
 
 import java.util.LinkedList;
+import java.util.UUID;
 
 import be.fnord.util.processModel.util.GraphLoader;
 
@@ -22,6 +23,7 @@ public class Vertex extends Graph<Vertex, Edge>{
 	public boolean isOR = false;
 	public boolean isGateway = false;
 	public boolean isSubprocess = false;
+	public boolean isTrace = false;
 	
 	public Vertex corresponding = null;
 	public LinkedList<String> boundaryRefs = new LinkedList<String>();
@@ -30,8 +32,9 @@ public class Vertex extends Graph<Vertex, Edge>{
 	public void setName(String name) {this.name = name;}
 	public String getType() {return GraphLoader.getType(type);}
 	public void setType(int type) {this.type = type;	}
+	public Vertex() { this(UUID.randomUUID().toString()); }
 	public Vertex(String _name){this(_name, GraphLoader.Task);}
-	public Vertex(String _name, int _type){this.name=_name; this.type = _type;}
+	public Vertex(String _name, int _type){super(); this.name=_name; this.type = _type;}
 	public Vertex getCorresponding() {	return corresponding;	}
 	public void setCorresponding(Vertex corresponding) {if(corresponding.corresponding != null || corresponding.isXOR) return ; 
 														this.corresponding = corresponding; this.corresponding.corresponding = this;}

@@ -4,6 +4,7 @@ import java.util.LinkedList;
 
 import be.fnord.util.processModel.Edge;
 import be.fnord.util.processModel.Graph;
+import be.fnord.util.processModel.Trace;
 import be.fnord.util.processModel.Vertex;
 import be.fnord.util.processModel.util.GraphChecker;
 import be.fnord.util.processModel.util.GraphLoader;
@@ -30,14 +31,20 @@ public class DecisionFreeGraphConversion {
 		if(!gc.CheckEventsAndGateways(g1)) a.e.println("Issue checking events and gateways"); 
 
 		LinkedList<Graph<Vertex, Edge>> _decisionless = GraphTransformer.makeDecisionFree(g1);
-		LinkedList<Graph<Vertex, Edge>> decisionless = GraphTransformer.removeDupes(_decisionless); 
+		LinkedList<Graph<Vertex, Edge>> decisionless = GraphTransformer.removeDupes(_decisionless);
+				
 		for(Graph<Vertex,Edge> g : decisionless){
 			GraphChecker gcc = new GraphChecker();
 			boolean isgood = gcc.CheckGraph(g);
-			a.e.println("Decision Free Graph: " + g);
-			a.e.println("Checking if well formed results in a return of : " + isgood);
+			//a.e.println("Decision Free Graph: " + g);
+			//a.e.println("Checking if well formed results in a return of : " + isgood);
 			if(isgood){
-				g.toView();
+				// Create some traces
+				LinkedList<Trace> traces = GraphTransformer.createTrace(g);
+				for(Trace trace : traces){
+					a.e.println("Got a trace: " + trace.toString());
+				}
+				//g.toView();
 			}
 		}
 		return ;

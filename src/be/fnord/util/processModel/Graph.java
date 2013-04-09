@@ -34,19 +34,41 @@ public class Graph<v extends Vertex , e extends Edge> extends DefaultDirectedGra
 	
 	// List of all graphs
 	public static TreeMap<String, Graph<Vertex,Edge>> allGraphs = new TreeMap<String, Graph<Vertex,Edge>>();	
-	public static TreeMap<String, Trace<Vertex,Edge>> traceRef = new TreeMap<String,Trace<Vertex,Edge>>();
+//	public static TreeMap<String, Trace<Vertex,Edge>> traceRef = new TreeMap<String,Trace<Vertex,Edge>>();
 	// Subgraph of this graph
 	public LinkedList<String> subGraphs = new LinkedList<String>();
 	// Subtrace of this graph
 	public LinkedList<String> subTraces = new LinkedList<String>();
 	
 	public List<Vertex> getEnds(){
-		LinkedList<Vertex> ends = new LinkedList<Vertex>();
+		ends = new LinkedList<Vertex>();
 		for(Vertex v: this.vertexSet()){
-			if(this.outDegreeOf(v) == 0)
+			if(this.outDegreeOf(v) == 0){
 				ends.add(v);
+				this.trueEnd = v;
+			}
 		}
 		return ends;
+	}
+	
+	public List<Vertex> getStarts(){
+		starts = new LinkedList<Vertex>();
+		for(Vertex v: this.vertexSet()){
+			if(this.inDegreeOf(v) == 0){
+				this.trueStart = v;
+				starts.add(v);
+			}
+		}
+		return starts;
+	}
+	
+	public Vertex getNext(Vertex current){
+		if(this.edgesOf(current).size() > 0){
+			for(Edge e: this.edgesOf(current) ) {
+				if(e.source == current) return e.target;
+			}
+		}
+		return null;
 	}
 	
 	/**
@@ -147,6 +169,8 @@ public class Graph<v extends Vertex , e extends Edge> extends DefaultDirectedGra
 	
 	public Vertex trueStart = null;	// Start Node 
 	public Vertex trueEnd = null;	// End Node
+	public LinkedList<Vertex> starts = new LinkedList<Vertex>();
+	public LinkedList<Vertex> ends = new LinkedList<Vertex>(); 
 	
 	public Graph<v,e> copyGraph(Graph<v,e> in){
 		Graph<v,e> copy = new Graph<v,e>(Edge.class);

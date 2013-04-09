@@ -13,7 +13,7 @@ import be.fnord.util.processModel.Vertex;
 
 /**
  * Transformation functions for graphs
- * 
+ * TODO Fix the templating system, I've written over it to produce code very quickly
  * @author Evan Morrison edm92@uowmail.edu.au http://www.fnord.be
  * Apache License, Version 2.0, Apache License Version 2.0, January 2004 http://www.apache.org/licenses/
  */
@@ -24,8 +24,8 @@ public class GraphTransformer {
 	/**
 	 * Create Trace
 	 */
-	public static LinkedList<Trace<Vertex,Edge>> createTraces(LinkedList<Graph<Vertex,Edge>> models){
-		LinkedList<Trace<Vertex,Edge>> results = new LinkedList<Trace<Vertex,Edge>>();
+	public static LinkedList<Trace> createTraces(LinkedList<Graph<Vertex,Edge>> models){
+		LinkedList<Trace> results = new LinkedList<Trace>();
 		
 		for(Graph<Vertex,Edge> g: models){
 			// Should we dedupe this too?
@@ -35,14 +35,61 @@ public class GraphTransformer {
 		return results;
 	}
 	
-	public static LinkedList<Trace<Vertex,Edge>> createTrace(Graph<Vertex,Edge> g){
-		LinkedList<Trace<Vertex,Edge>> results = new LinkedList<Trace<Vertex,Edge>>();
+	public static LinkedList<Trace> createTrace(Graph<Vertex,Edge> g){
+		LinkedList<Trace> results = new LinkedList<Trace>();
 		
-		// All input models should be decisionfree models, so we need to first check for parallel gateways. 
+		// All input models should be decision free models, so we need to first check for parallel gateways. 
 		// Break down the model into sections of parallel and non parallel paths
 		// Then combine each non-parallel path with OCP instances of the parallel path.  
+		Trace startTrace = new Trace();
+		Vertex currentNode;
+		if(g.trueStart != null){
+			currentNode = g.trueStart;
+
+			results.add(startTrace);
+			createTrace(g, startTrace, currentNode, g.trueEnd);
+		}	
 		
 		return results;
+	}
+	
+	private static void createTrace(Graph<Vertex,Edge> g, 
+									Trace currentTrace, 
+									Vertex currentNode, Vertex compareEnd){
+
+		currentTrace.addTraceNode(currentNode);	// Add the current node to the trace
+		// If we are at the end, return the trace. 
+		if(currentNode.toString().compareTo(compareEnd.toString()) == 0) {
+			return ;	// No need to add anything 
+		}
+		
+		// More than one node then we split here
+		// Should be a parallel
+		if(g.outDegreeOf(currentNode) > 1) {
+//			results.remove(currentTrace);
+			if(__DEBUG) a.e.println("Splitting into parallel at " + currentNode + " until " + currentNode.corresponding);
+			Trace subTrace = new Trace();
+			currentTrace.addTraceNode(subTrace);
+			Vertex next  = null;
+			for(Edge e : g.outgoingEdgesOf(currentNode)){
+				Vertex newNode = g.getEdgeTarget(e);
+				Trace newTrace = new Trace(); newTrace.isTrace = true;
+				subTrace.addTraceNode(newTrace);				
+				createTrace(g, newTrace,newNode,currentNode.corresponding);
+				next = g.getNext(currentNode.corresponding);
+				
+			}	
+			if(next != null)
+				createTrace(g, currentTrace,next,compareEnd);
+		}
+		else
+		for(Edge e : g.outgoingEdgesOf(currentNode)){
+			Vertex newNode = g.getEdgeTarget(e);
+			currentTrace.addTraceEdge(e);
+			createTrace(g, currentTrace,newNode,compareEnd);
+		}
+		
+		return ;
 	}
 	
 	

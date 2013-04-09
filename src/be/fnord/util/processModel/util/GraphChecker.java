@@ -338,6 +338,8 @@ public class GraphChecker {
 		fixGateways(g); // See if we can fix the gateways first then test them
 		if(!testGateways(g)) return false;
 		
+		// Set start and end nodes:
+		g.getStarts(); g.getEnds();
 		
 		return true;
 	        
