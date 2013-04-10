@@ -1,4 +1,4 @@
-package test.be.fnord.examples.functions;
+package be.fnord.examples.functions;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

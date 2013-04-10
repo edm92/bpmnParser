@@ -51,8 +51,14 @@ public class e {
 	public static String writeln(String msg) { return write(msg) + endl; }
 	public static String print(String msg)   { return print(msg, __DEFAULTDISPLAY); } 
 	public static String println(String msg) { return println(msg, __DEFAULTDISPLAY); }
-	public static String print(String msg,   int displayLevel)   { String result = write(msg); log(result);  System.out.print(result); return result; }
-	public static String println(String msg, int displayLevel) { String result = writeln(msg); log(result); System.out.print(result); return result; }
+	public static String println(String msg, int displayLevel) { return print(msg + endl); }
+	public static String print(String msg,   int displayLevel)   { String result = write(msg); log(result);  
+		switch(__DEFAULTDISPLAY){
+		case INFO:System.out.print(result); break;
+		case DEBUG:
+		case FATAL : System.err.print(result); break;
+		}; return result; }
+	
 	
 	public static void log(String msg){
 		if(__LOGGER){switch(__DEFAULTDISPLAY){

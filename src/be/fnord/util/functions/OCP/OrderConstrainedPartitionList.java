@@ -294,15 +294,15 @@ public class OrderConstrainedPartitionList <T> {
 	  }
 
 	  public static boolean breaker = false;
-	public static PartitionList<String> joinPartitionedSets(
-			PartitionList<String> results1, PartitionList<String> results2) {
-		PartitionList<String> returnResults = new PartitionList<String>();
-		for(PartitionListItem<String> item : results1){
-			PartitionListElement<String> list4 = new PartitionListElement<String>(item);
-			PartitionList<String> results5 = OrderConstrainedPartitionList.makePartitions(list4);
+	public static <T> PartitionList<T> joinPartitionedSets(
+			PartitionList<T> results1, PartitionList<T> results2) {
+		PartitionList<T> returnResults = new PartitionList<T>();
+		for(PartitionListItem<T> item : results1){
+			PartitionListElement<T> list4 = new PartitionListElement<T>(item);
+			PartitionList<T> results5 = OrderConstrainedPartitionList.makePartitions(list4);
 			
 		
-			PartitionList<String> results6 = OrderConstrainedPartitionList.joinSets(results5, results2);
+			PartitionList<T> results6 = OrderConstrainedPartitionList.joinSets(results5, results2);
 			returnResults.addAll(results6);
 
 		}

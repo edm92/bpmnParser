@@ -45,7 +45,6 @@ public class GraphTransformer {
 		Vertex currentNode;
 		if(g.trueStart != null){
 			currentNode = g.trueStart;
-
 			results.add(startTrace);
 			createTrace(g, startTrace, currentNode, g.trueEnd);
 		}	
@@ -65,15 +64,17 @@ public class GraphTransformer {
 		
 		// More than one node then we split here
 		// Should be a parallel
-		if(g.outDegreeOf(currentNode) > 1) {
+		if(g.outDegreeOf(currentNode) > 1 && currentNode.isAND) {
 //			results.remove(currentTrace);
 			if(__DEBUG) a.e.println("Splitting into parallel at " + currentNode + " until " + currentNode.corresponding);
 			Trace subTrace = new Trace();
+			currentTrace.removeTraceNode(currentNode);
 			currentTrace.addTraceNode(subTrace);
 			Vertex next  = null;
 			for(Edge e : g.outgoingEdgesOf(currentNode)){
 				Vertex newNode = g.getEdgeTarget(e);
 				Trace newTrace = new Trace(); newTrace.isTrace = true;
+				newTrace.addTraceNode(currentNode);
 				subTrace.addTraceNode(newTrace);				
 				createTrace(g, newTrace,newNode,currentNode.corresponding);
 				next = g.getNext(currentNode.corresponding);

@@ -1,4 +1,4 @@
-package test.be.fnord.examples.ModelExamples;
+package be.fnord.examples.ModelExamples;
 
 import java.util.LinkedList;
 
@@ -26,6 +26,7 @@ public class DecisionFreeGraphConversion {
 		/////////////////////////////////////////
 		
 		Graph<Vertex,Edge> g1 = GraphLoader.loadModel("models/MultiGateTest.bpmn20.xml", a.e.DONT_SAVE_MESSAGES_AND_PARTICIPANTS);
+//		Graph<Vertex,Edge> g1 = GraphLoader.loadModel("models/Model1.bpmn20.xml", a.e.DONT_SAVE_MESSAGES_AND_PARTICIPANTS);
 //		System.out.println("G1-" + g1);
 		GraphChecker gc = new GraphChecker();
 		if(!gc.CheckEventsAndGateways(g1)) a.e.println("Issue checking events and gateways"); 
@@ -42,7 +43,7 @@ public class DecisionFreeGraphConversion {
 				// Create some traces
 				LinkedList<Trace> traces = GraphTransformer.createTrace(g);
 				for(Trace trace : traces){
-					a.e.println("Got a trace: " + trace.toString());
+					a.e.println("Got a trace: " + trace.toVertexArray());
 				}
 				//g.toView();
 			}
