@@ -30,6 +30,7 @@ public class GraphTransformer {
 		for(Graph<Vertex,Edge> g: models){
 			// Should we dedupe this too?
 			results.addAll(createTrace(g));
+			
 		}
 		
 		return results;

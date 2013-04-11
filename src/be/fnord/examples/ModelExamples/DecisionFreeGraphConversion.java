@@ -43,7 +43,7 @@ public class DecisionFreeGraphConversion {
 				// Create some traces
 				LinkedList<Trace> traces = GraphTransformer.createTrace(g);
 				for(Trace trace : traces){
-					a.e.println("Got a trace: " + trace.toVertexArray());
+					a.e.println("Got a trace: " + trace.toVertexArray() );  a.e.println("");
 				}
 				//g.toView();
 			}

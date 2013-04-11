@@ -1,6 +1,7 @@
 package be.fnord.util.processModel;
 
 import java.util.LinkedList;
+import java.util.TreeMap;
 
 import be.fnord.util.functions.OCP.OrderConstrainedPartitionList;
 import be.fnord.util.functions.OCP.PartitionList;
@@ -25,6 +26,11 @@ public class Trace extends Vertex{
 	LinkedList<Vertex> nodes = new LinkedList<Vertex>();
 	LinkedList<Edge> edges = new LinkedList<Edge>();
 	public boolean parallel = false;
+	
+	// Need to trigger this when finished using toVectorArray!
+	public static void reset(){
+		successStores = new TreeMap<String, LinkedList<Vertex>>();
+	}
 	
 	public void addTraceNode(Vertex vert){
 		nodes.add(vert);
@@ -56,201 +62,197 @@ public class Trace extends Vertex{
 		return result;
 	}
 	public static int ten = 10;
+	
+	/**
+	 * toVertexArray should take as input a trace and then convert that trace into a list of verticies. 
+	 * The actual return is a list of lists of vertices. We have multiple returns because for each array conduct an
+	 * order constrained permutation on parallel activities. 
+	 * @return
+	 */
 	public LinkedList<LinkedList<Vertex>> toVertexArray(){
+		// TODO Need to fix this 
+		Trace.reset();	// This is a really weird hack and will screw with parallel processing.
+		// Needed because for some reason the processGroupsOfParallelNodes returns different results
+		
+		return toVertexArray(KEEP_START_END_NODES_IN_TRACE);
+	}
+	
+	public static final boolean IGNORE_START_END_NODES_IN_TRACE = true;
+	public static final boolean KEEP_START_END_NODES_IN_TRACE = false;
+	
+	public static int num = 10;
+	public LinkedList<LinkedList<Vertex>> toVertexArray(boolean SHOULD_IGNORE_START_END_NODES){
 		// For the main store of vertices
 		LinkedList<LinkedList<Vertex>> mainResult = new LinkedList<LinkedList<Vertex>>();
-		LinkedList<Vertex> __result = new LinkedList<Vertex>();
-		mainResult.add(__result);
 		
-		// For sub traces
-		LinkedList<LinkedList<LinkedList<Vertex>>> subtraces = null;
+		LinkedList<Vertex> newResult = new LinkedList<Vertex>();
+		LinkedList<Vertex> currentLL = new LinkedList<Vertex>();
 		
-		boolean tripped = false;
-		boolean finished = true;
-		int i = ten + 0;
-		ten += 10; int _ten = ten; 
-		for(Vertex v : nodes){	
-			if(v.isTrace  && v != nodes.getFirst()) {
-				if(!tripped){ tripped = true;
-				// Start with a fresh list of lists of lists. 
-					subtraces = new LinkedList<LinkedList<LinkedList<Vertex>>>();
+		int _num = num ;
+		num+= 10;
+		boolean inSquares = false;
+		// Iterate through each node in the trace		
+		for(Vertex v: nodes){
+			// Check if the node is actually a trace trapped in a vertex body
+			if(v.isTrace){	// It is, so lets process it as a trace. 
+				// In square is used to group traces next to each other, i.e. <a, [<b,c>,<d,e>],f >
+				// for the group in the square <b,c>,<d,e>, the group should be OCP'd together (to get the result:
+				// <b,c,d,e>, <b,d,c,e>, <b,d,e,c>, <d,b,c,e> ... etc. 
+				if(!inSquares){
+					inSquares = true;
+				}
+				Trace t = (Trace)v;	// We expand the this trace into a list of lists of elements. 
+				LinkedList<LinkedList<Vertex>> newvArray = t.toVertexArray(IGNORE_START_END_NODES_IN_TRACE) ;
+				// Result should be a list of possible alternatives. 
+				// [<s, a,b, e>,<s, c,d, e>,<s, d,f, e>]
+				
+				for(LinkedList<Vertex> ele : newvArray){
+					//a.e.println("Adding " + _num + " :: " + ele);
+					currentLL.addAll(ele);
+
+				}
+				//currentLL.addAll(newvArray);
+				
+			}else{
+				if(inSquares){
+						inSquares = false;
+						// Process LL's
+						a.e.print("1--");
+						LinkedList<Vertex> returnedResults = _processGroupsOfParallelNodes(currentLL);
+						newResult.addAll(returnedResults); // .substring(0, currentString.length()/2));
 				}
 				
-				// Treat the vertex like a trace (technically it's a trace trapped inside a verticies body. 
-				Trace t = (Trace)v;
-				
-				// Create subtraces
-				LinkedList<LinkedList<Vertex>> subtrace = t.toVertexArray();
-				
-				if(subtrace.toString().trim().compareTo("[[]]") != 0 && subtrace.toString().trim().compareTo("[]") != 0){
-					subtraces.add(subtrace);
-					finished = false;
-				}						
-				
-				// We do the merge once we stop collecting subtraces. 
-			}else if(!v.isTrace){
-				if(tripped){
-					// Let merge everything together and add it to the main results before adding the new element. 
-					LinkedList<LinkedList<Vertex>> merged = mergeListOListOList(subtraces);
-					a.e.println("Running on " + subtraces);
-					a.e.println("Merge result = " + merged);
-					mainResult = mergeListOList(mainResult, merged);
-//					a.e.println("Main result = " + mainResult);
-					tripped = false; 
-					finished = true;
-				}
-				
-				// Process the sequential elements here
-				for(LinkedList<Vertex> _result : mainResult){
-//					a.e.println("Adding " + v);
-					_result.add(v);
-				}
+				newResult.add(v);
 			}
 			
-			if(v == nodes.getLast() && !finished){
-				if(tripped){
-					// Let merge everything together and add it to the main results before adding the new element. 
-					LinkedList<LinkedList<Vertex>> merged = mergeListOListOList(subtraces);
-					mainResult =  mergeListOList(mainResult, merged);
-					a.e.println("Main result = " + mainResult);
-					tripped = false; 
-					finished = true;
+			if(v == nodes.getLast()){
+				if(inSquares){
+						inSquares = false;
+						a.e.print("2--");
+						LinkedList<Vertex> returnedResults = _processGroupsOfParallelNodes(currentLL);
+						newResult.addAll(returnedResults); // .substring(0, currentString.length()/2));
 				}
 			}
 			
 		}
-			
+		mainResult.add(newResult);
 		return mainResult;
 	}
 	
 	/**
-	 * Function for merging the results of the merged LoLoL into LoL. See below
-	 * @param mainResult
-	 * @param merged
+	 * Weird Hack variable. Seems to be needed but would like to remove it. 
+	 * Technically it speeds up processing a little, but will also screw with parallel processing
 	 */
-	private LinkedList<LinkedList<Vertex>> mergeListOList(LinkedList<LinkedList<Vertex>> mainResult,
-			LinkedList<LinkedList<Vertex>> merged) {
-		
-		LinkedList<LinkedList<Vertex>> newResult = new LinkedList<LinkedList<Vertex>>();
-		a.e.println("Looking at " + mainResult + a.e.endl + a.e.tab + " and " + merged);
-		// Iterate through main results and for each trace, copy and append elements of merged
-		for(LinkedList<Vertex> mResult : mainResult){
-			
-			for(LinkedList<Vertex> mMerge : merged){
-				// Copy in for the main 
-				LinkedList<Vertex> cpmResult = new LinkedList<Vertex>();
-				for(Vertex v : mResult){
-					cpmResult.add(v);
-				}
-				// add in the merged
-//				a.e.println("Considering " + mMerge);
-				for(Vertex v : mMerge){
-					cpmResult.add(v);
-				}
-				newResult.add(cpmResult);				
-			}
+	public static TreeMap<String, LinkedList<Vertex>> successStores = new TreeMap<String, LinkedList<Vertex>>();
+	
+	public LinkedList<Vertex> _processGroupsOfParallelNodes(LinkedList<Vertex> currentLL){
+		if(successStores.containsKey(currentLL.toString().trim())){
+			return successStores.get(currentLL.toString().trim());
 		}
-		// Overright
-		mainResult = newResult;
-		a.e.println("Main result = " + mainResult);
+		
+		
+		LinkedList<LinkedList<Vertex>> newLL = new LinkedList<LinkedList<Vertex>>();
+		LinkedList<LinkedList<Vertex>> newLL2 = new LinkedList<LinkedList<Vertex>>();
+		newLL.add(currentLL);
+		newLL2 = processGroupsOfParallelNodes(newLL);
+		// If there is some weird computational error, recompute
+		if(newLL2.size() == 0 ) {
+			if(successStores.containsKey(currentLL.toString().trim()))
+				return successStores.get(currentLL.toString().trim());
+			return currentLL;
+		}
+//		a.e.println("Given currentLL I won! ;" + currentLL + ";");
+		successStores.put(currentLL.toString().trim(), newLL2.getFirst());
+		return newLL2.getFirst();
+	}
+	
+	public LinkedList<LinkedList<Vertex>> processGroupsOfParallelNodes(LinkedList<LinkedList<Vertex>> currentLL ){
+		Vertex start = currentLL.getFirst().getFirst();
+		Vertex end = currentLL.getLast().getLast();
+		LinkedList<LinkedList<Vertex>> newResult = new LinkedList<LinkedList<Vertex>>();
+		
+		
+		
+		for(LinkedList<Vertex> cc : currentLL){
+//			cc.remove(start);
+//			cc.remove(end);
+			
+			LinkedList<Vertex> removeList= new LinkedList<Vertex>();
+			PartitionListItem<Vertex> OCS = new PartitionListItem<Vertex>();
+			PartitionListElement<Vertex> list = new PartitionListElement<Vertex>();
+			//a.e.println("Gonna try working with the following:");
+			a.e.incIndent();
+			for(Vertex s: cc){
+				if(s == start){ 
+					removeList.add(s);
+					list = new PartitionListElement<Vertex>();
+				}else if(s == end){
+					removeList.add(s);
+					OCS.add(list);
+				}
+				else{ 
+					//a.e.println(s.name);
+					list.add(s);
+				}
+			}
+			for(Vertex s: removeList)
+				cc.remove(s);
+			a.e.decIndent();
+			
+			// We now should be able to create an OCP of the elements in CC			
+			int numIterations = 0; 
+			PartitionList<Vertex> OCPresults1 = null; // OrderConstrainedPartitionList.makePartitions( list);
+			PartitionList<Vertex> OCPresults2 = null;
+			PartitionList<Vertex> OCPresults3 = null;
+			for(PartitionListElement<Vertex> _list : OCS){
+				switch(numIterations){
+				case 0:
+					OCPresults1 =  OrderConstrainedPartitionList.makePartitions(_list);
+					numIterations++;
+					break;
+				case 1:
+					OCPresults2 =  OrderConstrainedPartitionList.makePartitions(_list);
+					OCPresults3 = OrderConstrainedPartitionList.joinSets(OCPresults1, OCPresults2);
+					// Shuffle back
+					OCPresults1 = OCPresults2;
+					OCPresults2 = OCPresults3;
+					numIterations++;
+					break;
+				case 2:
+				default:
+					OCPresults2 =  OrderConstrainedPartitionList.makePartitions(_list);
+					OCPresults3 = OrderConstrainedPartitionList.joinPartitionedSets(OCPresults1, OCPresults2);
+					// Shuffle back
+					OCPresults1 = OCPresults2;
+					OCPresults2 = OCPresults3;
+					break;
+				}
+			}
+			
+			
+			// Do this for each OCP
+			if(OCPresults3 != null)
+			for(PartitionListItem<Vertex> _item : OCPresults3){
+				for(PartitionListElement<Vertex> _ele : _item){
+					LinkedList<Vertex> newCC = new LinkedList<Vertex>();
+					newCC.push(start);
+					for(Vertex v : _ele){
+						newCC.add(v);	
+					}
+					newCC.add(end);					
+					newResult.add(newCC);
+				}
+			}
+			
+
+		}
+		
+//		a.e.println("returning results! : " + newResult);
 		return newResult;
 	}
 	
 	
-	/**
-	 * Function for mergingsubtraces 
-	 * @param subtraces
-	 * @return
-	 */
-	private LinkedList<LinkedList<Vertex>> mergeListOListOList(
-			LinkedList<LinkedList<LinkedList<Vertex>>> subtraces) {
-		LinkedList<PartitionList<Vertex>> _partitions = new LinkedList<>();
-		
-		if(subtraces.size() < 1  || subtraces.get(0).size() < 1 || 
-				subtraces.get(0) == null || subtraces.get(0).get(0) == null) {
-			LinkedList<LinkedList<Vertex>> result = new LinkedList<LinkedList<Vertex>>();
-			result.add(new LinkedList<Vertex>());
-			return result;
-		}
 
-		Vertex startNode = subtraces.get(0).get(0).getFirst();
-		Vertex endNode = subtraces.get(0).get(0).getLast();
-		
-		
-		
-		if(__DEBUG) a.e.println("Checking " + subtraces);
-		LinkedList<PartitionList<Vertex>> _traces = new LinkedList<PartitionList<Vertex>>();
-		for(LinkedList<LinkedList<Vertex>> subtrace : subtraces){			
-			for(LinkedList<Vertex> trace : subtrace){
-				
-				PartitionListElement<Vertex> list = new PartitionListElement<Vertex>();
-				for(Vertex v: trace){
-					if(v == startNode || v == endNode) continue;
-					list.add(v);
-				}
-				PartitionList<Vertex> __part = OrderConstrainedPartitionList.makePartitions(list) ; 
-				_traces.add( __part );
-				if(__DEBUG) a.e.println("Get list: " + list);
-			}
-						
-		}
-		
-		// OCP these togeather
-		boolean start = false;
-		boolean _start = false;
-		PartitionList<Vertex> mergeResult = null ;  
-		PartitionList<Vertex> lastList=null;
-		if(_traces.size() <= 1 ){
-			PartitionListElement<Vertex> newTrace = new PartitionListElement<Vertex>();
-			PartitionListItem<Vertex> newTraceItem = new PartitionListItem<Vertex>();
-			PartitionList<Vertex> emptyList = new PartitionList<Vertex>();
-			newTraceItem.add(newTrace);
-			emptyList.add(newTraceItem);
-			PartitionList<Vertex> thisList = _traces.get(0);
-			
-			mergeResult = OrderConstrainedPartitionList.joinSets( thisList, emptyList );
-			_partitions.add(mergeResult);
-		}else			
-		for(PartitionList<Vertex> thisList : _traces){
-			if(!_start) { _start = true; lastList = thisList ; }else{
-				if(!start) { start = true; 
-					mergeResult = OrderConstrainedPartitionList.joinSets(lastList, thisList);
-					lastList = thisList ;
-				} else{
-					mergeResult = OrderConstrainedPartitionList.joinPartitionedSets(lastList, thisList);
-					lastList = thisList ;
-					
-				}
-			}
-		}
-		_partitions.add(mergeResult);
-		for(PartitionListItem<Vertex> _newPartition: mergeResult){
-			for(PartitionListElement<Vertex> __newPartition: _newPartition){
-				if(__DEBUG) a.e.println("Partition: " + __newPartition + "\n");
-			}
-			
-		}
-		
-		
-		LinkedList<LinkedList<Vertex>> results = new LinkedList<LinkedList<Vertex>>();
-		for(PartitionList<Vertex> newPartition: _partitions){
-			for(PartitionListItem<Vertex> _newPartition: newPartition){
-				for(PartitionListElement<Vertex> __newPartition: _newPartition){
-					LinkedList<Vertex> myResult = new LinkedList<Vertex>();
-//					myResult.add(startNode); 
-					for(Vertex myV : __newPartition){
-						myResult.add(myV);
-					}
-//					myResult.add(endNode); 
-					if(__DEBUG) a.e.println("Partition: " + _newPartition + "\n");
-					results.add((LinkedList<Vertex>)myResult);
-				}
-				
-			}
-		}
-
-		return results;
-	}
 	public String toString(){
 		String result = "Trace<";
 		int i = 0;
